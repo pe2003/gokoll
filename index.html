@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Анонимные вопросы</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="icon" href="/favicon-16x16.png" type="image/png">
+</head>
+<body class="min-h-screen bg-gray-50 flex flex-col items-center p-4 sm:p-6 font-inter">
+    <h1 class="text-3xl font-semibold text-gray-900 mb-8">Анонимные вопросы</h1>
+
+    <!-- Форма для вопросов -->
+    <div class="w-full max-w-lg mb-10">
+        <form id="questionForm" class="flex flex-col sm:flex-row gap-3">
+            <input
+                type="text"
+                id="questionInput"
+                placeholder="Задай вопрос..."
+                class="flex-1 p-3 rounded-lg border border-gray-200 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+            />
+            <button
+                type="submit"
+                class="bg-indigo-600 text-white px-5 py-3 rounded-lg hover:bg-indigo-700 transition"
+            >
+                Отправить
+            </button>
+        </form>
+    </div>
+
+    <!-- Список вопросов -->
+    <div id="questionsList" class="w-full max-w-lg space-y-4"></div>
+
+    <script>
+        // Загрузка вопросов из localStorage или пустой массив
+        let questions = JSON.parse(localStorage.getItem('questions')) || [];
+
+        // Сохранение вопросов в localStorage
+        function saveQuestions() {
+            localStorage.setItem('questions', JSON.stringify(questions));
+        }
+
+        // Отрисовка вопросов, отсортированных по голосам
+        function renderQuestions() {
+            const questionsList = document.getElementById('questionsList');
+            questionsList.innerHTML = '';
+
+            // Сортировка по убыванию голосов
+            questions.sort((a, b) => b.votes - a.votes);
+
+            questions.forEach((question, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'bg-white p-5 rounded-lg shadow-sm hover:shadow-md transition';
+                questionDiv.innerHTML = `
+                    <p class="text-gray-800 text-lg mb-3">${question.text}</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-500 text-sm">${question.votes} голосов</span>
+                        <button
+                            onclick="toggleLike(${index}, this)"
+                            class="px-4 py-2 rounded-md text-sm font-medium ${question.liked ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600'} hover:bg-red-500 hover:text-white transition"
+                        >
+                            ${question.liked ? '❤️' : '🩶'}
+                        </button>
+                    </div>
+                `;
+                questionsList.appendChild(questionDiv);
+            });
+        }
+
+        // Добавление нового вопроса
+        document.getElementById('questionForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const questionInput = document.getElementById('questionInput');
+            const questionText = questionInput.value.trim();
+
+            if (questionText) {
+                questions.push({
+                    text: questionText,
+                    votes: 0,
+                    liked: false
+                });
+                questionInput.value = '';
+                saveQuestions();
+                renderQuestions();
+            }
+        });
+
+        // Переключение лайка/дизлайка
+        function toggleLike(index, button) {
+            if (questions[index].liked) {
+                questions[index].votes -= 1;
+                questions[index].liked = false;
+            } else {
+                questions[index].votes += 1;
+                questions[index].liked = true;
+            }
+            saveQuestions();
+            renderQuestions();
+        }
+
+        // Начальная отрисовка
+        renderQuestions();
+    </script>
+</body>
+</html>
